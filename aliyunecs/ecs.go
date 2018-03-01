@@ -67,6 +67,7 @@ type Driver struct {
 	VSwitchId               string
 	Zone                    string
 	PrivateIPOnly           bool
+	UsePrivateIP 			bool
 	InternetMaxBandwidthOut int
 	RouteCIDR               string
 	SLBID                   string
@@ -141,7 +142,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			EnvVar: "ECS_INSTANCE_TYPE",
 		},
 		mcnflag.StringFlag{
-			Name:   "aliyunecs-private-ip",
+			Name:   "aliyunecs-use-private-ip",
 			Usage:  "ECS VPC instance private IP",
 			Value:  "",
 			EnvVar: "ECS_VPC_PRIVATE_IP",
@@ -304,6 +305,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.SSHPassword = flags.String("aliyunecs-ssh-password")
 	d.SSHPort = 22
 	d.PrivateIPOnly = flags.Bool("aliyunecs-private-address-only")
+	d.UsePrivateIP = flags.Bool("aliyunecs-use-private-ip")
 	d.InternetMaxBandwidthOut = flags.Int("aliyunecs-internet-max-bandwidth")
 	d.RouteCIDR = flags.String("aliyunecs-route-cidr")
 	d.SLBID = flags.String("aliyunecs-slb-id")
@@ -736,6 +738,11 @@ func (d *Driver) GetIP() (string, error) {
 	inst, err := d.getInstance()
 	if err != nil {
 		return "", err
+	}
+
+	if d.UsePrivateIP {
+
+		return inst.VpcAttributes.PrivateIpAddress.IpAddress[0], nil
 	}
 
 	return d.getIP(inst), nil
