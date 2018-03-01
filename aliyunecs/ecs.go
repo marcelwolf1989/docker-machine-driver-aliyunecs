@@ -80,6 +80,7 @@ type Driver struct {
 	SystemDiskCategory      ecs.DiskCategory
 	SystemDiskSize          int
 
+
 	client    *ecs.Client
 	slbClient *slb.Client
 }
@@ -570,18 +571,15 @@ func (d *Driver) Create() error {
 
 func (d *Driver) configNetwork(vpcId string, instanceId string) error {
 	var err error
-	if vpcId != "" {
-		// Assign public IP if not private IP only
 
-		if !d.PrivateIPOnly {
-			// Allocate public IP address for classic network
-			var ipAddress string
-			ipAddress, err = d.getClient().AllocatePublicIpAddress(instanceId)
-			if err != nil {
-				err = fmt.Errorf("%s | Error allocate public IP address for instance %s: %v", d.MachineName, instanceId, err)
-			} else {
-				log.Infof("%s | Allocate publice IP address %s for instance %s successfully", d.MachineName, ipAddress, instanceId)
-			}
+	if !d.PrivateIPOnly {
+		// Always allocate public IP address instead of Elastic IP
+		var ipAddress string
+		ipAddress, err = d.getClient().AllocatePublicIpAddress(instanceId)
+		if err != nil {
+			err = fmt.Errorf("%s | Error allocate public IP address for instance %s: %v", d.MachineName, instanceId, err)
+		} else {
+			log.Infof("%s | Allocate publice IP address %s for instance %s successfully", d.MachineName, ipAddress, instanceId)
 		}
 	}
 
