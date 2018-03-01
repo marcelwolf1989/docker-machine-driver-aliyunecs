@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/AliyunContainerService/docker-machine-driver-aliyunecs/aliyunecs"
+	"github.com/marcelwolf1989/docker-machine-driver-aliyunecs/aliyunecs"
 	"github.com/docker/machine/libmachine/drivers/plugin"
 )
 

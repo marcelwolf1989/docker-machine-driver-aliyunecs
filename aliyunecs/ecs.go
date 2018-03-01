@@ -40,6 +40,7 @@ const (
 	timeout                  = 300
 	defaultSSHUser           = "root"
 	maxRetry                 = 20
+	defaultBandwith			 = 5
 )
 
 var (
@@ -162,8 +163,8 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		},
 		mcnflag.IntFlag{
 			Name:   "aliyunecs-internet-max-bandwidth",
-			Usage:  "Maxium bandwidth for Internet access (in Mbps), default 1",
-			Value:  1,
+			Usage:  "Maxium bandwidth for Internet access (in Mbps), default 5",
+			Value:  defaultBandwith,
 			EnvVar: "ECS_INTERNET_MAX_BANDWIDTH",
 		},
 		mcnflag.StringFlag{
@@ -569,7 +570,7 @@ func (d *Driver) Create() error {
 
 func (d *Driver) configNetwork(vpcId string, instanceId string) error {
 	var err error
-	if vpcId == "" {
+	if vpcId != "" {
 		// Assign public IP if not private IP only
 
 		if !d.PrivateIPOnly {
@@ -580,43 +581,6 @@ func (d *Driver) configNetwork(vpcId string, instanceId string) error {
 				err = fmt.Errorf("%s | Error allocate public IP address for instance %s: %v", d.MachineName, instanceId, err)
 			} else {
 				log.Infof("%s | Allocate publice IP address %s for instance %s successfully", d.MachineName, ipAddress, instanceId)
-			}
-		}
-	} else {
-		err := d.addRouteEntry(vpcId)
-		if err != nil {
-			return err
-		}
-		if !d.PrivateIPOnly {
-			// Create EIP for virtual private cloud
-			eipArgs := ecs.AllocateEipAddressArgs{
-				RegionId:    d.Region,
-				Bandwidth:   d.InternetMaxBandwidthOut,
-				ClientToken: d.getClient().GenerateClientToken(),
-			}
-			log.Infof("%s | Allocating Eip address for instance %s ...", d.MachineName, instanceId)
-
-			_, allocationId, err := d.getClient().AllocateEipAddress(&eipArgs)
-			if err != nil {
-				return fmt.Errorf("%s | Failed to allocate EIP address: %v", d.MachineName, err)
-			}
-			err = d.getClient().WaitForEip(d.Region, allocationId, ecs.EipStatusAvailable, 60)
-			if err != nil {
-				log.Infof("%s | Releasing Eip address %s for ...", d.MachineName, allocationId)
-				err2 := d.getClient().ReleaseEipAddress(allocationId)
-				if err2 != nil {
-					log.Warnf("%s | Failed to release EIP address: %v", d.MachineName, err2)
-				}
-				return fmt.Errorf("%s | Failed to wait EIP %s: %v", d.MachineName, allocationId, err)
-			}
-			log.Infof("%s | Associating Eip address %s for instance %s ...", d.MachineName, allocationId, instanceId)
-			err = d.getClient().AssociateEipAddress(allocationId, instanceId)
-			if err != nil {
-				return fmt.Errorf("%s | Failed to associate EIP address: %v", d.MachineName, err)
-			}
-			err = d.getClient().WaitForEip(d.Region, allocationId, ecs.EipStatusInUse, 60)
-			if err != nil {
-				return fmt.Errorf("%s | Failed to wait EIP %s: %v", d.MachineName, allocationId, err)
 			}
 		}
 	}
