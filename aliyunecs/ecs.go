@@ -41,6 +41,7 @@ const (
 	defaultSSHUser           = "root"
 	maxRetry                 = 20
 	defaultBandwith			 = 5
+	defaultUsePrivateIp      = false
 )
 
 var (
@@ -141,11 +142,10 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Value:  defaultInstanceType,
 			EnvVar: "ECS_INSTANCE_TYPE",
 		},
-		mcnflag.StringFlag{
+		mcnflag.BoolFlag{
 			Name:   "aliyunecs-use-private-ip",
 			Usage:  "ECS VPC instance private IP",
-			Value:  "",
-			EnvVar: "ECS_VPC_PRIVATE_IP",
+			EnvVar: "ECS_USE_VPC_PRIVATE_IP",
 		},
 		mcnflag.StringFlag{
 			Name:   "aliyunecs-description",
