@@ -742,7 +742,7 @@ func (d *Driver) GetIP() (string, error) {
 
 	if d.UsePrivateIP {
 
-		return inst.VpcAttributes.PrivateIpAddress.IpAddress[0], nil
+		return d.GetPrivateIP(inst), nil
 	}
 
 	return d.getIP(inst), nil
