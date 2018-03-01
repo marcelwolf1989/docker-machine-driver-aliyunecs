@@ -743,9 +743,11 @@ func (d *Driver) GetIP() (string, error) {
 	if d.UsePrivateIP {
 
 		return d.GetPrivateIP(inst), nil
-	}
+	} else {
 
 	return d.getIP(inst), nil
+
+	}
 }
 
 func (d *Driver) GetPrivateIP(inst *ecs.InstanceAttributesType) string {
